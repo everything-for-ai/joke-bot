@@ -1,110 +1,75 @@
 #!/usr/bin/env python3
 """
-Joke Bot - Daily jokes and fun facts delivery
-Supports multiple platforms: Feishu, WeCom, Telegram, etc.
+Joke Bot - 每日一笑
 """
 
-import os
-import json
-import random
-from typing import Dict, List
+from datetime import datetime
+from typing import List
 
 
 class JokeBot:
-    def __init__(self, config_file: str = "config.json"):
-        self.config = self.load_config(config_file)
-        self.jokes = self.load_jokes()
+    """笑话机器人"""
     
-    def load_config(self, config_file: str) -> Dict:
-        """Load configuration"""
-        default_config = {
-            "schedule": "12:00",
-            "platforms": ["feishu"],
-            "joke_types": ["chinese", "english", "pun", "code"]
-        }
+    def __init__(self):
+        self.jokes = [
+            # 程序员笑话
+            "程序员最讨厌的饼：画的饼",
+            "双肩包里面永远是电脑、充电器、还有咖啡",
+            "代码能跑就行，别问我为什么",
+            "这个需求做不了，不是，技术上实现有难度",
+            "我重构了一下代码，结果重构了三四个 bug",
+            "上线前测了没问题，上了就有问题",
+            "Git 的作用是让代码消失得更专业",
+            "Stack Overflow 是我老师傅",
+            "程序员的发量和工作年限成反比",
+            "没有报错就是最大的好消息",
+            # 职场笑话
+            "开会的时候：我懂了。开会结束后：我不懂",
+            "周一综合征患者请举手",
+            "周五的下午，时间会变慢",
+            "工资就像是大姨妈，每月来一次，一周就走了",
+            "老板画的饼，永远吃不到",
+            # 生活笑话
+            "早睡早起身体好，就是做不到",
+            "减肥是明天的事",
+            "收藏了等于学了",
+            "下次一定",
+            "道理我都懂，然并卵"
+        ]
         
-        if os.path.exists(config_file):
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-                default_config.update(config)
-        
-        return default_config
+        self.programmer_jokes = [
+            "if (age > 30) {脱发 = true;}",
+            "代码注释？不存在的",
+            "IDE 打开就是一下午",
+            "Ctrl + C / Ctrl + V 是最常用的快捷键",
+            "bug 是别人写的，功劳是我的",
+            "上线前拜三拜，祈求代码无 bug",
+            "日志不打，出事来找",
+            "我写的代码能跑，你不要动它",
+            "不是bug多，是你测试方法不对",
+            "程序员的浪漫：送她一个 GitHub 星标仓库"
+        ]
     
-    def load_jokes(self) -> Dict[str, List[str]]:
-        """Load joke database"""
-        return {
-            "chinese": [
-                "为什么程序员喜欢黑色？因为 RGB(0,0,0) 是黑色的！",
-                "程序员最讨厌的饼：画的饼",
-                "代码写完了，测试是不可能测试的，这辈子都不可能测试的。",
-                "两个程序员结婚，生个孩子叫字节，女儿叫字节跳不动。",
-                "程序员的双肩包里面永远是电脑、充电器、还有咖啡。"
-            ],
-            "english": [
-                "Why do programmers prefer dark mode? Because light attracts bugs!",
-                "There's no place like 127.0.0.1",
-                "Software and beer: both free, both open source, both make you feel weird without.",
-                "Why do Java developers wear glasses? Because they can't C#!",
-                "A SQL query walks into a bar, walks up to two tables and asks... 'Can I join you?'"
-            ],
-            "pun": [
-                "The computer was always lying to me, it had a hard disk and a chip on its shoulder.",
-                "I told my computer I needed a break, now it won't stop sending me vacation ads.",
-                "Programmers are gearheads for the mind, debugging is just mental auto repair.",
-                "My code doesn't have bugs, it just develops unexpected features."
-            ],
-            "code": [
-                "// This code is perfect until you try to understand it",
-                "TODO: Fix this later (never)",
-                "if (it works) { don't touch it; } // The golden rule",
-                "// I wrote this code, but God knows what it does",
-                "print('Hello, World!') // The beginning of every programmer's journey"
-            ]
-        }
+    def get_jokes(self) -> List[str]:
+        """获取笑话"""
+        import random
+        all_jokes = self.jokes + self.programmer_jokes
+        return random.sample(all_jokes, min(5, len(all_jokes)))
     
-    def get_random_joke(self, types: List[str] = None) -> str:
-        """Get a random joke"""
-        if types is None:
-            types = self.config.get("joke_types", ["chinese", "english"])
+    def format_message(self) -> str:
+        """格式化消息"""
+        jokes = self.get_jokes()
+        lines = [f"😄 每日一笑 - {datetime.now().strftime('%m/%d')}\n"]
         
-        all_jokes = []
-        for joke_type in types:
-            if joke_type in self.jokes:
-                all_jokes.extend(self.jokes[joke_type])
+        for i, joke in enumerate(jokes, 1):
+            lines.append(f"{i}. {joke}")
         
-        if not all_jokes:
-            all_jokes = self.jokes["chinese"]
-        
-        return random.choice(all_jokes)
-    
-    def get_daily_jokes(self, count: int = 3) -> str:
-        """Get multiple jokes for daily delivery"""
-        jokes = []
-        for i in range(count):
-            joke = self.get_random_joke()
-            jokes.append(f"{i+1}. {joke}")
-        
-        return f"""
-😄 每日一笑 - {jokes[0].split('.')[0]}
-
-{chr(10).join(jokes)}
-
-#笑话 #每日一笑 #开心一笑
-        """.strip()
-    
-    def send_to_feishu(self, message: str):
-        """Send to Feishu"""
-        print(f"[Feishu] {message}")
-    
-    def send_to_wecom(self, message: str):
-        """Send to WeCom"""
-        print(f"[WeCom] {message}")
+        lines.append("\n#笑话 #每日一笑 #开心一笑")
+        return '\n'.join(lines)
     
     def run(self):
-        """Main execution"""
-        message = self.get_daily_jokes()
-        print(message)
-        return message
+        print(self.format_message())
+        return self.format_message()
 
 
 if __name__ == "__main__":
